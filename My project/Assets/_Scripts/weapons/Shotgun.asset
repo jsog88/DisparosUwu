@@ -12,9 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ee1c19bb5f8c0249972d046e533f2e0, type: 3}
   m_Name: Shotgun
   m_EditorClassIdentifier: 
+  weaponName: ShotGun
+  weaponPrefab: {fileID: 7113163936780780190, guid: 5090c420360b2f34f95601ef423b44fc,
+    type: 3}
   range: 5
   verticalRange: 5
   horizontalRange: 10
   fireRate: 2
-  damage: 5
+  damage: 3
+  maxAmmo: 200000000
   sound: {fileID: 8300000, guid: 27aececb9c50b7f4483ca66fec79f0c4, type: 3}

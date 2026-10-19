@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ee1c19bb5f8c0249972d046e533f2e0, type: 3}
+  m_Name: Minigun
+  m_EditorClassIdentifier: 
+  weaponName: Minigun
+  weaponPrefab: {fileID: 5380166854228040870, guid: c70e5d719ac2b8f46ba4d861265f2d2c,
+    type: 3}
+  range: 100
+  verticalRange: 3
+  horizontalRange: 5
+  fireRate: 0.2
+  damage: 10
+  maxAmmo: 100
+  sound: {fileID: 0}
