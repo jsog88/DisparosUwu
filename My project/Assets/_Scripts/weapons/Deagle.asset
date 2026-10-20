@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2ee1c19bb5f8c0249972d046e533f2e0, type: 3}
-  m_Name: Minigun
+  m_Name: Deagle
   m_EditorClassIdentifier: 
-  weaponName: Minigun
-  weaponPrefab: {fileID: 5380166854228040870, guid: c70e5d719ac2b8f46ba4d861265f2d2c,
+  weaponName: Deagle
+  weaponPrefab: {fileID: 6947951569935671343, guid: ce1da2c29dfb4d543b5e46b47eaac23c,
     type: 3}
   range: 100
   verticalRange: 3
-  horizontalRange: 5
-  fireRate: 0.2
+  horizontalRange: 3
+  fireRate: 0.5
   damage: 10
-  maxAmmo: 100
-  sound: {fileID: 0}
+  maxAmmo: 10
+  sound: {fileID: 8300000, guid: eeb51682ce61db843bbd0037f9fca720, type: 3}

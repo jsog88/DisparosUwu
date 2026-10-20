@@ -1,42 +1,46 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class JetpackModule : MonoBehaviour
 {
     [Header("Estado")]
-    public bool hasJetpack = false; // Se activa al recoger el pickup
+    public bool hasJetpack = false;
+
+    [Header("UI / HUD")]
+    public Scrollbar fuelScrollbar;
 
     [Header("Configuración de Vuelo")]
-    public KeyCode jetpackKey = KeyCode.Space; // Tecla para volar (Espacio)
-    public float jetpackForce = 35f;           // Fuerza (Aumentada a 35)
+    public KeyCode jetpackKey = KeyCode.Space;
+    public float jetpackForce = 35f;
 
     [Header("Combustible")]
     public float maxFuel = 100f;
-    public float fuelBurnRate = 25f;
-    public float fuelRefillRate = 15f;
-    public float refillDelay = 1f;
+    public float fuelBurnRate = 25f; // Consumo de gasolina por segundo
 
-    [Header("Estado Actual (Lectura)")]
+    [Header("Estado Actual")]
     public float currentFuel;
     public bool isFlying;
 
     private Rigidbody rb;
     private CharacterController cc;
-    private float cooldownTimer;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         cc = GetComponent<CharacterController>();
         currentFuel = maxFuel;
+
+        if (fuelScrollbar != null)
+        {
+            fuelScrollbar.gameObject.SetActive(false);
+        }
     }
 
     void Update()
     {
-        // Solo vuela si hasJetpack es verdadero y presionas la tecla
         if (hasJetpack && Input.GetKey(jetpackKey) && currentFuel > 0)
         {
             isFlying = true;
-            cooldownTimer = refillDelay;
         }
         else
         {
@@ -44,8 +48,8 @@ public class JetpackModule : MonoBehaviour
         }
 
         HandleFuel();
+        UpdateUI();
 
-        // Si usas CharacterController (movimiento por código)
         if (isFlying && cc != null)
         {
             Vector3 moveDir = Vector3.up * jetpackForce * Time.deltaTime;
@@ -55,10 +59,8 @@ public class JetpackModule : MonoBehaviour
 
     void FixedUpdate()
     {
-        // Si usas Rigidbody (movimiento por físicas)
         if (isFlying && rb != null)
         {
-            // Cancela la velocidad de caída antes de impulsar
             if (rb.velocity.y < 0)
             {
                 rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
@@ -70,6 +72,7 @@ public class JetpackModule : MonoBehaviour
 
     void HandleFuel()
     {
+        // Solo consume gasolina mientras vuela
         if (isFlying)
         {
             currentFuel -= fuelBurnRate * Time.deltaTime;
@@ -77,18 +80,29 @@ public class JetpackModule : MonoBehaviour
             {
                 currentFuel = 0;
                 isFlying = false;
+                hasJetpack = false; // Se destruye/desactiva el jetpack al agotarse
             }
         }
-        else if (hasJetpack)
+    }
+
+    void UpdateUI()
+    {
+        if (fuelScrollbar == null) return;
+
+        if (hasJetpack && currentFuel > 0)
         {
-            if (cooldownTimer > 0)
+            if (!fuelScrollbar.gameObject.activeSelf)
             {
-                cooldownTimer -= Time.deltaTime;
+                fuelScrollbar.gameObject.SetActive(true);
             }
-            else if (currentFuel < maxFuel)
+
+            fuelScrollbar.size = currentFuel / maxFuel;
+        }
+        else
+        {
+            if (fuelScrollbar.gameObject.activeSelf)
             {
-                currentFuel += fuelRefillRate * Time.deltaTime;
-                if (currentFuel > maxFuel) currentFuel = maxFuel;
+                fuelScrollbar.gameObject.SetActive(false);
             }
         }
     }
@@ -97,6 +111,12 @@ public class JetpackModule : MonoBehaviour
     {
         hasJetpack = true;
         currentFuel = maxFuel;
-        Debug.Log(">>> EnableJetpack() ejecutado correctamente en " + gameObject.name + " <<<");
+
+        if (fuelScrollbar != null)
+        {
+            fuelScrollbar.gameObject.SetActive(true);
+            fuelScrollbar.size = 1f;
+            fuelScrollbar.value = 1f;
+        }
     }
 }

@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class PlayerWeaponHandler : MonoBehaviour
 {
-    [Header("Referencia al punto de origen en la Cámara")]
-    public Transform weaponHolder; // Arrastra el objeto 'WeaponHolder' (hijo de Main Camera)
+    [Header("Punto de Agarre")]
+    public Transform weaponHolder;
 
     private GameObject currentWeaponInstance;
 

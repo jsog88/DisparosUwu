@@ -5,15 +5,17 @@ using UnityEngine;
 public class GunController : MonoBehaviour
 {
     public static GunController instance;
-    private BoxCollider gunTrigger;
+
+    [Header("Configuración de Arma")]
     public Guns gun; // ScriptableObject actual
-    public LayerMask raycastLayerMask;
     public AudioSource audioSource;
+    public LayerMask raycastLayerMask; // Capa para detectar enemigos
 
     [Header("Munición")]
     public int currentAmmo;
 
     private bool canFire;
+    private Camera mainCamera;
 
     private void Awake()
     {
@@ -29,7 +31,12 @@ public class GunController : MonoBehaviour
 
     void Start()
     {
-        gunTrigger = GetComponent<BoxCollider>();
+        mainCamera = Camera.main;
+        if (mainCamera == null)
+        {
+            mainCamera = GetComponentInChildren<Camera>();
+        }
+
         canFire = true;
 
         if (gun != null)
@@ -42,13 +49,10 @@ public class GunController : MonoBehaviour
     {
         if (newGun == null) return;
 
-        // 1. Asignar los datos del ScriptableObject
         gun = newGun;
         currentAmmo = gun.maxAmmo;
-        SetTriggers();
 
-        // 2. CONEXIÓN CON EL WEAPON HANDLER:
-        // Busca el handler en el Jugador para actualizar el modelo 3D visual
+        // Actualizar el modelo visual 3D en las manos del jugador
         PlayerWeaponHandler weaponHandler = GetComponent<PlayerWeaponHandler>();
         if (weaponHandler == null)
         {
@@ -63,38 +67,11 @@ public class GunController : MonoBehaviour
         Debug.Log($"Arma equipada en GunController: {gun.name}");
     }
 
-    public void SetTriggers()
-    {
-        if (gunTrigger != null && gun != null)
-        {
-            gunTrigger.size = new Vector3(gun.horizontalRange, gun.verticalRange, gun.range);
-            gunTrigger.center = new Vector3(0, (0.5f * gun.verticalRange - 1f), gun.range * 0.5f);
-        }
-    }
-
     IEnumerator CanFire()
     {
         canFire = false;
         yield return new WaitForSeconds(gun.fireRate);
         canFire = true;
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        Enemy enemy = other.GetComponent<Enemy>();
-        if (enemy)
-        {
-            EnemyManager.instance.AddEnemy(enemy);
-        }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        Enemy enemy = other.GetComponent<Enemy>();
-        if (enemy)
-        {
-            EnemyManager.instance.RemoveEnemy(enemy);
-        }
     }
 
     public void Fire()
@@ -110,17 +87,39 @@ public class GunController : MonoBehaviour
 
             currentAmmo--;
 
-            foreach (Enemy enemy in EnemyManager.instance.enemiesInRange)
+            // Si la máscara de capa no está asignada en el Inspector, usa la capa Default para no fallar
+            LayerMask maskToUse = (raycastLayerMask.value == 0) ? Physics.DefaultRaycastLayers : raycastLayerMask;
+
+            // Disparo mediante Raycast proyectado desde el centro exacto de la pantalla
+            if (mainCamera != null)
             {
-                var dir = (enemy.transform.position - transform.position).normalized;
+                Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
                 RaycastHit hit;
-                if (Physics.Raycast(transform.position, dir, out hit, gun.range * 1.5f, raycastLayerMask))
+
+                // Lanza un rayo frontal a la distancia indicada por el ScriptableObject (gun.range)
+                if (Physics.Raycast(ray, out hit, gun.range, maskToUse))
                 {
-                    if (hit.transform == enemy.transform)
+                    // Busca el componente Enemy en el objeto impactado o en sus padres
+                    Enemy enemy = hit.transform.GetComponent<Enemy>();
+                    if (enemy == null)
+                    {
+                        enemy = hit.transform.GetComponentInParent<Enemy>();
+                    }
+
+                    if (enemy != null)
                     {
                         Quaternion rot = Quaternion.LookRotation(-hit.normal);
                         enemy.Damage(gun.damage, rot);
+                        Debug.Log($"¡IMPACTO CONFIRMADO! Enemigo {enemy.name} recibió {gun.damage} de daño.");
                     }
+                    else
+                    {
+                        Debug.Log($"Raycast golpeó {hit.transform.name}, pero no tiene script Enemy.");
+                    }
+                }
+                else
+                {
+                    Debug.Log("El disparo no impactó ningún objeto dentro del rango.");
                 }
             }
 
@@ -138,12 +137,6 @@ public class GunController : MonoBehaviour
         gun = null;
         currentAmmo = 0;
 
-        if (gunTrigger != null)
-        {
-            gunTrigger.size = Vector3.zero;
-        }
-
-        // Remover también el modelo visual
         PlayerWeaponHandler weaponHandler = GetComponent<PlayerWeaponHandler>();
         if (weaponHandler == null)
         {
@@ -157,26 +150,24 @@ public class GunController : MonoBehaviour
 
         Debug.Log("Sin balas. Arma desequipada.");
     }
+
     public bool TryAddAmmo(int amount)
     {
-        // Si no hay arma equipada o el SO no existe, no se puede recargar
         if (gun == null)
         {
             Debug.Log("No tienes ningún arma equipada para recargar.");
             return false;
         }
 
-        // Si ya tiene la munición completa, no la recoge
         if (currentAmmo >= gun.maxAmmo)
         {
             Debug.Log("El arma ya tiene la munición al máximo.");
             return false;
         }
 
-        // Le suma la munición sin sobrepasar el límite máximo del ScriptableObject (maxAmmo)
         currentAmmo = Mathf.Min(currentAmmo + amount, gun.maxAmmo);
         Debug.Log($"Munición recargada. Balas actuales: {currentAmmo} / {gun.maxAmmo}");
 
-        return true; // Se recargó con éxito
+        return true;
     }
 }
